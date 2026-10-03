@@ -101,8 +101,7 @@ function updateFirefly(firefly) {
     firefly.y += firefly.speedY;
 
 
-    // Limites da área dos vagalumes
-
+    // Limites da área dos vagalumes (bate e volta nas bordas)
     const margin = 60;
 
     if (firefly.x < margin) {

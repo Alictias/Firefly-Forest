@@ -13,7 +13,7 @@ function drawTree(x, y, size) {
     );
 
 
-    // Silhueta escura atrás
+    // Silhueta
     ctx.fillStyle = "#193b32";
 
     ctx.beginPath();
@@ -38,7 +38,7 @@ function drawTree(x, y, size) {
     ctx.fill();
 
 
-    // Copa da árvore
+    // Copa
     ctx.fillStyle = "#315c4b";
 
     ctx.beginPath();

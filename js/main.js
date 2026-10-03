@@ -2,6 +2,7 @@
     const canvas = document.getElementById("game");
     
     const ctx = canvas.getContext("2d");
+    //pode ser alterador para webgl para 3d dps
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -14,8 +15,6 @@
         canvas.height
     );
 
-    
-    
 
         canvas.addEventListener("click", function(event) {
 
@@ -27,7 +26,6 @@
 
     //--------------------------------------------------------
 //DESENHAR NA TELA (chamar as funções)  
-
 
     generateStars();
     generateForest();
@@ -68,7 +66,6 @@
         }
 
         drawUI();
-        // Próximo quadro
 
         requestAnimationFrame(gameLoop);
     }

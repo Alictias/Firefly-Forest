@@ -46,11 +46,11 @@ function generateStars() {
     for (let i = 0; i < 60; i++) {
 
         const star = {
-
+            //posição aleatória da estrela
             x: Math.random() * canvas.width,
 
             y: Math.random() * canvas.height * 0.55,
-
+            //tamanho da estrela
             size: Math.random() * 2 + 1
         };
 
