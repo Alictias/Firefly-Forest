@@ -16,7 +16,7 @@
     );
 
 
-        canvas.addEventListener("click", function(event) {
+    canvas.addEventListener("click", function(event) {
 
         captureFirefly(
             event.clientX,

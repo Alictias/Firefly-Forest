@@ -92,10 +92,11 @@ function drawFirefly(firefly) {
 function updateFirefly(firefly) {
 
     // Movimento da direção
-    firefly.angle += firefly.turnSpeed;
+    firefly.angle += firefly.turnSpeed;//serve para curva
 
-    firefly.speedX = Math.cos(firefly.angle) * 0.5;
-    firefly.speedY = Math.sin(firefly.angle) * 0.5;
+    //controla o movimento geral, alterando as direções horizontal e vertical com base no ângulo
+    firefly.speedX = Math.cos(firefly.angle) * 0.5;//horizontal
+    firefly.speedY = Math.sin(firefly.angle) * 0.5;//vertical
 
     firefly.x += firefly.speedX;
     firefly.y += firefly.speedY;
@@ -103,25 +104,25 @@ function updateFirefly(firefly) {
 
     // Limites da área dos vagalumes (bate e volta nas bordas)
     const margin = 60;
-
+    //se bateu na esquerda, vai para direita
     if (firefly.x < margin) {
         firefly.angle = 0;
     }
-
+    //o contrario 
     if (firefly.x > canvas.width - margin) {
         firefly.angle = Math.PI;
     }
-
+    //y é vertical, se bateu em baixo, vai para cima 
     if (firefly.y < margin) {
         firefly.angle = Math.PI / 2;
     }
-
+    //contrario (limitado a 0.7 pois vagalumes só chegam a 70% da tela)
     if (firefly.y > canvas.height * 0.7 - margin) {
         firefly.angle = -Math.PI / 2;
     }
 
 
-    // Brilho
+    // Brilho aumenta a cada frame, diminui quando chega em 1 (efeito pisca pisca)
 
     firefly.glow += firefly.glowSpeed;
 
@@ -130,9 +131,9 @@ function updateFirefly(firefly) {
     }
 }
 
-// Capturar vagalume
+// Capturar vagalume com o mouse
 
-function captureFirefly(mouseX, mouseY) {
+function captureFirefly(mouseX, mouseY) {//recebe a posição do clique
 
     for (let i = fireflies.length - 1; i >= 0; i--) {
 
