@@ -1,0 +1,1 @@
+//no momento vazio, será iutil para definir mais estados ddo jogo no futuro como talvez botões, menu, pontuação, temp, etc
