@@ -1,12 +1,12 @@
 let capturedFireflies = 0;
 let gameWon = false;
-const JAR_FIREFLIES_LIMIT = 75;
+const JAR_FIREFLIES_LIMIT = 75; // sobrescrito pelo modo
 
 const fireflies = [];
 const jarFireflies = [];
 
-function generateFireflies() {
-    for (let i = 0; i < 75; i++) {
+function generateFireflies(config) {
+    for (let i = 0; i < config.count; i++) {
         fireflies.push({
             worldAngle: Math.random() * Math.PI * 2,  // posição horizontal no mundo
             y: 80 + Math.random() * canvas.height * 0.5,
@@ -47,12 +47,13 @@ function drawFirefly(firefly, camAngle) {
     ctx.fill();
 }
 
-function updateFirefly(firefly) {
+function updateFirefly(firefly, speed = 1.0) {
     firefly.moveAngle += firefly.turnSpeed;
 
-    // Movimento horizontal vira rotação no mundo
-    firefly.worldAngle += Math.cos(firefly.moveAngle) * 0.0008;
-    firefly.y          += Math.sin(firefly.moveAngle) * 0.5;
+    firefly.worldAngle += Math.cos(firefly.moveAngle) * 0.0008 * speed;
+    if (firefly.worldAngle >  Math.PI * 2) firefly.worldAngle -= Math.PI * 2;
+    if (firefly.worldAngle < 0)            firefly.worldAngle += Math.PI * 2;
+    firefly.y          += Math.sin(firefly.moveAngle) * 0.5 * speed;
 
     // Limites verticais
     if (firefly.y < 60)                        { firefly.y = 60;                       firefly.moveAngle = Math.PI / 2; }
@@ -95,7 +96,7 @@ function captureFirefly(mouseX, mouseY, camAngle) {
                 glowSpeed: 0.004 + Math.random() * 0.004
             });
 
-            if (capturedFireflies >= JAR_FIREFLIES_LIMIT) gameWon = true;
+            if (capturedFireflies >= MODES[gameMode].limit) gameWon = true;
             break;
         }
     }
