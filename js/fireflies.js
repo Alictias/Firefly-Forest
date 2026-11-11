@@ -1,9 +1,12 @@
 let capturedFireflies = 0;
+let gameWon = false;
+const JAR_FIREFLIES_LIMIT = 25;
 
 const fireflies = [];
+const jarFireflies = [];
 
 function generateFireflies() {
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 25; i++) {
 
         const firefly = {
 
@@ -131,6 +134,20 @@ function updateFirefly(firefly) {
     }
 }
 
+function updateJarFireflies() {
+    for (const jf of jarFireflies) {
+        jf.angle += jf.turnSpeed;
+        jf.x += Math.cos(jf.angle) * 0.004;
+        jf.y += Math.sin(jf.angle) * 0.004;
+        if (jf.x < 0.05) { jf.x = 0.05; jf.angle = 0; }
+        if (jf.x > 0.95) { jf.x = 0.95; jf.angle = Math.PI; }
+        if (jf.y < 0.05) { jf.y = 0.05; jf.angle = Math.PI / 2; }
+        if (jf.y > 0.95) { jf.y = 0.95; jf.angle = -Math.PI / 2; }
+        jf.glow += jf.glowSpeed;
+        if (jf.glow > 1 || jf.glow < 0) jf.glowSpeed *= -1;
+    }
+}
+
 // Capturar vagalume com o mouse
 
 function captureFirefly(mouseX, mouseY) {//recebe a posição do clique
@@ -149,6 +166,19 @@ function captureFirefly(mouseX, mouseY) {//recebe a posição do clique
             fireflies.splice(i, 1);
 
             capturedFireflies++;
+
+            jarFireflies.push({
+                x: 0.2 + Math.random() * 0.6,
+                y: 0.2 + Math.random() * 0.6,
+                angle: Math.random() * Math.PI * 2,
+                turnSpeed: -0.015 + Math.random() * 0.03,
+                glow: Math.random(),
+                glowSpeed: 0.004 + Math.random() * 0.004
+            });
+
+            if (capturedFireflies >= JAR_FIREFLIES_LIMIT) {
+                gameWon = true;
+            }
 
             break;
         }

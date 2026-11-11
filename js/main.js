@@ -17,11 +17,27 @@
 
 
     canvas.addEventListener("click", function(event) {
-
-        captureFirefly(
-            event.clientX,
-            event.clientY
-        );
+        if (gameWon) {
+            // Soltar os vagalumes de volta
+            for (const jf of jarFireflies) {
+                fireflies.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.7,
+                    size: 3 + Math.random() * 2,
+                    speedX: 0,
+                    speedY: 0,
+                    glow: Math.random(),
+                    glowSpeed: 0.01 + Math.random() * 0.02,
+                    angle: Math.random() * Math.PI * 2,
+                    turnSpeed: -0.02 + Math.random() * 0.04
+                });
+            }
+            jarFireflies.length = 0;
+            capturedFireflies = 0;
+            gameWon = false;
+            return;
+        }
+        captureFirefly(event.clientX, event.clientY);
     });
 
     //--------------------------------------------------------
@@ -59,11 +75,11 @@
         // Atualiza e desenha os vagalumes
 
         for (const firefly of fireflies) {
-
             updateFirefly(firefly);
-
             drawFirefly(firefly);
         }
+
+        updateJarFireflies();
 
         drawUI();
 
