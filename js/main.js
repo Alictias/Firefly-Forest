@@ -16,8 +16,8 @@
         hard: { count: 75, limit: 10, speed: 1.8 }
     };
 
-    const TIME_LIMIT = 120000;
-    const DAWN_START = 90000;
+    const TIME_LIMIT = 60000;
+    const DAWN_START = 40000;
 
     // --- Leaderboard (top 5 por modo) ---
     function getLeaderboard(mode) {
