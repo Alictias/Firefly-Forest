@@ -2,6 +2,7 @@
 function drawUI() {
     if (gameState === "menu")          { drawMenu();        return; }
     if (gameState === "entering_name") { drawJar(); drawEnterName(); return; }
+    if (gameState === "paused")        { drawJar(); drawPauseScreen(); return; }
     drawJar();
     if (gameState === "won")  drawWinScreen();
     if (gameState === "lost") drawLostScreen();
@@ -16,6 +17,7 @@ function drawMenu() {
     ctx.fillStyle = "rgba(10,8,30,0.72)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Vagalumes orbitando
     for (let i = 0; i < 10; i++) {
         const a = (i / 10) * Math.PI * 2 + performance.now() * 0.0008;
         const rx = cx + Math.cos(a) * 220;
@@ -29,31 +31,45 @@ function drawMenu() {
         ctx.fill();
     }
 
+    // Título — topo
+    const titleY = canvas.height * 0.14;
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff6d6";
-    ctx.font = "bold 72px Arial";
-    ctx.fillText("Firefly Forest", cx, cy - 100);
+    ctx.font = "bold 68px Arial";
+    ctx.fillText("Firefly Forest", cx, titleY);
 
-    ctx.font = "18px Arial";
+    ctx.font = "17px Arial";
     ctx.fillStyle = "rgba(255,246,168,0.6)";
-    ctx.fillText("Capture os vagalumes antes que a noite acabe", cx, cy - 55);
+    ctx.fillText("Capture os vagalumes antes que a noite acabe", cx, titleY + 36);
 
-    drawMenuButton(cx - 85, cy + 30, 140, 50, "Easy", "#2a5c42", "#3a7a5a");
-    drawMenuButton(cx + 85, cy + 30, 140, 50, "Hard", "#5c2a2a", "#7a3a3a");
+    // Botões — meio
+    const btnY = canvas.height * 0.38;
+    drawMenuButton(cx - 160, btnY, 140, 50, "Easy",      "#2a5c42", "#3a7a5a");
+    drawMenuButton(cx,       btnY, 140, 50, "Hard",      "#5c2a2a", "#7a3a3a");
+    drawMenuButton(cx + 160, btnY, 140, 50, "Have Fun!", "#2a3a6a", "#3a55aa");
 
-    ctx.font = "13px Arial";
+    // Descrições
+    ctx.font = "12px Arial";
     ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.fillText("25 vagalumes", cx - 85, cy + 65);
-    ctx.fillText("30 vagalumes · mais rápidos", cx + 85, cy + 65);
+    ctx.fillText("10 vagalumes",              cx - 160, btnY + 38);
+    ctx.fillText("20 vagalumes · mais rápidos", cx,      btnY + 38);
+    ctx.fillText("1 min · capture o máximo!",  cx + 160, btnY + 38);
 
-    // Top 5 Easy
-    drawLeaderboardPanel(cx - 85, cy + 90, "easy", "Easy");
-    // Top 5 Hard
-    drawLeaderboardPanel(cx + 85, cy + 90, "hard", "Hard");
+    // Leaderboards — abaixo dos botões
+    const lbY = canvas.height * 0.52;
+    drawLeaderboardPanel(cx - 160, lbY, "easy",    "Easy");
+    drawLeaderboardPanel(cx,       lbY, "hard",    "Hard");
+    drawLeaderboardPanel(cx + 160, lbY, "havefun", "Have Fun");
+
+    // Instruções — rodapé
+    ctx.font = "13px Arial";
+    ctx.fillStyle = "rgba(255,246,168,0.35)";
+    ctx.fillText("← A  D →   girar câmera     clique   capturar vagalume     ESC   pausar", cx, canvas.height - 24);
 }
 
 function drawLeaderboardPanel(cx, topY, mode, label) {
     const board = getLeaderboard(mode);
+    const isEndless = MODES[mode].endless;
     ctx.textAlign = "center";
     ctx.font = "bold 13px Arial";
     ctx.fillStyle = "rgba(255,246,168,0.7)";
@@ -70,9 +86,10 @@ function drawLeaderboardPanel(cx, topY, mode, label) {
         const e = board[i];
         const y = topY + 36 + i * 20;
         const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+        const val = isEndless ? `${e.score} 🪲✨` : formatTime(e.time);
         ctx.font = i === 0 ? "bold 13px Arial" : "12px Arial";
         ctx.fillStyle = i === 0 ? "#ffd700" : "rgba(255,246,168,0.55)";
-        ctx.fillText(`${medal} ${e.name}  ${formatTime(e.time)}`, cx, y);
+        ctx.fillText(`${medal} ${e.name}  ${val}`, cx, y);
     }
 }
 
@@ -163,16 +180,19 @@ function drawJar() {
     ctx.roundRect(jarX + 10, jarY + neckH + 10, 10, jarH * 0.55, 5);
     ctx.fill();
 
-    const remaining = Math.max(0, TIME_LIMIT - elapsedTime);
-    const isUrgent  = remaining < 30000;
+    const remaining = Math.max(0, TIME_LIMIT() - elapsedTime);
+    const isUrgent  = !MODES[gameMode].endless && remaining < 10000;
     ctx.fillStyle = isUrgent
         ? `rgba(255,${Math.floor(100 + Math.sin(Date.now() * 0.01) * 80)},80,1)`
         : "#fff6d6";
     ctx.font = "20px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(`${capturedFireflies} / ${limit}`, jarX + jarW + 14, jarY + neckH + jarH / 2 - 10);
+    const countStr = MODES[gameMode].endless
+        ? `${capturedFireflies} 🪲✨`
+        : `${capturedFireflies} / ${MODES[gameMode].limit}`;
+    ctx.fillText(countStr, jarX + jarW + 14, jarY + neckH + jarH / 2 - 10);
     ctx.font = "bold 15px Arial";
-    ctx.fillText(formatTime(remaining), jarX + jarW + 14, jarY + neckH + jarH / 2 + 14);
+    ctx.fillText(MODES[gameMode].endless ? formatTime(remaining) : formatTime(remaining), jarX + jarW + 14, jarY + neckH + jarH / 2 + 14);
 
     ctx.restore();
 }
@@ -273,7 +293,10 @@ function drawWinScreen() {
 
     ctx.font = "20px Arial";
     ctx.fillStyle = "rgba(255,246,168,0.9)";
-    ctx.fillText(`Tempo: ${formatTime(elapsedTime)}`, cx, cy - 55);
+    const resultStr = MODES[gameMode].endless
+        ? `Vagalumes: ${capturedFireflies} 🪲✨`
+        : `Tempo: ${formatTime(elapsedTime)}`;
+    ctx.fillText(resultStr, cx, cy - 55);
 
     // Top 5
     const board = getLeaderboard(gameMode);
@@ -285,10 +308,13 @@ function drawWinScreen() {
         const e = board[i];
         const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
         // Destaca a entrada recém adicionada
-        const isRecent = Math.abs(e.time - elapsedTime) < 50;
+        const isRecent = MODES[gameMode].endless
+            ? e.score === capturedFireflies
+            : Math.abs(e.time - elapsedTime) < 50;
         ctx.font = isRecent ? "bold 14px Arial" : "13px Arial";
         ctx.fillStyle = isRecent ? "#ffd700" : (i === 0 ? "#ffd700" : "rgba(255,246,168,0.55)");
-        ctx.fillText(`${medal} ${e.name}  ${formatTime(e.time)}`, cx, cy + 10 + i * 22);
+        const val = MODES[gameMode].endless ? `${e.score} 🪲✨` : formatTime(e.time);
+        ctx.fillText(`${medal} ${e.name}  ${val}`, cx, cy + 10 + i * 22);
     }
 
     ctx.font = "14px Arial";
@@ -324,4 +350,28 @@ function drawLostScreen() {
     ctx.font = "15px Arial";
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     ctx.fillText("Clique para voltar ao menu", cx, cy + 70);
+}
+
+function drawPauseScreen() {
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+
+    ctx.fillStyle = "rgba(20,18,45,0.95)";
+    ctx.strokeStyle = "rgba(255,246,168,0.4)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(cx - 180, cy - 90, 360, 180, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff6d6";
+    ctx.font = "bold 48px Arial";
+    ctx.fillText("Pausado", cx, cy - 20);
+
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "rgba(255,246,168,0.5)";
+    ctx.fillText("ESC para continuar", cx, cy + 25);
 }
