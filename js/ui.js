@@ -180,8 +180,8 @@ function drawJar() {
     ctx.roundRect(jarX + 10, jarY + neckH + 10, 10, jarH * 0.55, 5);
     ctx.fill();
 
-    const remaining = Math.max(0, TIME_LIMIT() - elapsedTime);
-    const isUrgent  = !MODES[gameMode].endless && remaining < 10000;
+    const remaining = gameTimer;
+    const isUrgent  = !MODES[gameMode].endless && remaining < 5000;
     ctx.fillStyle = isUrgent
         ? `rgba(255,${Math.floor(100 + Math.sin(Date.now() * 0.01) * 80)},80,1)`
         : "#fff6d6";

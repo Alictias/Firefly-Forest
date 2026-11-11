@@ -9,7 +9,8 @@
     let gameState = "menu"; // "menu"|"playing"|"paused"|"won"|"lost"|"entering_name"
     let gameMode  = "easy";
     let startTime = 0;
-    let elapsedTime = 0;
+    let elapsedTime = 0;  // tempo real total, invisível, salvo no leaderboard
+    let gameTimer = 0;    // timer regressivo visível, sofre bônus de combo
     let pausedAt = 0;
 
     // Fade in
@@ -31,7 +32,7 @@
 
     const MODES = {
         easy:     { count: 75, limit: 10, speed: 1.0, timeLimit: 10000,  dawnStart: 7000,  endless: false },
-        hard:     { count: 75, limit: 20, speed: 1.8, timeLimit: 10000,  dawnStart: 7000,  endless: false },
+        hard:     { count: 75, limit: 20, speed: 1.8, timeLimit: 15000,  dawnStart: 7000,  endless: false },
         havefun:  { count: 75, limit: Infinity, speed: 1.2, timeLimit: 60000, dawnStart: 40000, endless: true  }
     };
 
@@ -80,6 +81,7 @@
         gameMode  = mode;
         gameState = "playing";
         startTime = performance.now();
+        gameTimer = TIME_LIMIT();
         fireflies.length    = 0;
         jarFireflies.length = 0;
         capturedFireflies   = 0;
@@ -106,7 +108,12 @@
 
         if (e.key === "Escape") {
             if (gameState === "playing") { pausedAt = performance.now(); gameState = "paused"; }
-            else if (gameState === "paused") { startTime += performance.now() - pausedAt; gameState = "playing"; }
+            else if (gameState === "paused") {
+                const pauseDuration = performance.now() - pausedAt;
+                startTime += pauseDuration;
+                gameTimer += pauseDuration; // congela o timer visível também
+                gameState = "playing";
+            }
         }
 
         if (gameState === "entering_name") {
@@ -148,8 +155,7 @@
             if (now - comboTimer < COMBO_WINDOW) {
                 combo++;
                 if (combo >= 2) {
-                    startTime -= BONUS_TIME;
-                    elapsedTime = Math.min(elapsedTime, performance.now() - startTime);
+                    gameTimer = Math.min(gameTimer + BONUS_TIME, TIME_LIMIT() * 2); // bônus no timer visível, máx 2× o limite
                     bonusPopups.push({ x: event.clientX, y: event.clientY - 20, t: 1.0, text: `+${BONUS_TIME/1000}s!` });
                 }
             } else {
@@ -214,17 +220,22 @@
             const rotSpeed = 0.03;
             if (keys["ArrowLeft"]  || keys["a"] || keys["A"]) targetCamAngle -= rotSpeed;
             if (keys["ArrowRight"] || keys["d"] || keys["D"]) targetCamAngle += rotSpeed;
-            elapsedTime = now - startTime;
+
+            elapsedTime = now - startTime;  // tempo real, sempre cresce
+
+            if (!gameLoop._lastNow) gameLoop._lastNow = now;
+            const delta = now - gameLoop._lastNow;
+            gameLoop._lastNow = now;
+            gameTimer = Math.max(0, gameTimer - delta);
 
             if (gameWon) {
                 elapsedTime = now - startTime;
-                nameIsNew   = isTopFive(gameMode, elapsedTime);
+                nameIsNew   = isTopFive(gameMode, MODES[gameMode].endless ? capturedFireflies : elapsedTime);
                 nameInput   = "";
                 gameState   = nameIsNew ? "entering_name" : "won";
-            } else if (elapsedTime >= TIME_LIMIT()) {
-                elapsedTime = TIME_LIMIT();
+            } else if (gameTimer <= 0) {
+                elapsedTime = now - startTime;
                 if (MODES[gameMode].endless) {
-                    // Have fun: salva score por pontuação
                     nameIsNew = isTopFive(gameMode, capturedFireflies);
                     nameInput = "";
                     gameState = nameIsNew ? "entering_name" : "won";
@@ -264,7 +275,7 @@
 
         if (gameState === "playing" || gameState === "paused" || gameState === "entering_name") {
             // Velocidade aumenta com o tempo (até 1.5× nos últimos 10s)
-            const timeRatio  = Math.min(1, elapsedTime / TIME_LIMIT());
+            const timeRatio  = Math.min(1, (TIME_LIMIT() - gameTimer) / TIME_LIMIT());
             const speedBoost = 1 + timeRatio * 0.5;
 
             for (const firefly of fireflies) {
