@@ -85,7 +85,7 @@ function drawJar() {
     ctx.fillStyle = "#fff6d6";
     ctx.font = "20px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(`Vagalumes: ${capturedFireflies} / 25`, jarX + jarW + 14, jarY + neckH + jarH / 2);
+    ctx.fillText(`Vagalumes: ${capturedFireflies} / 75`, jarX + jarW + 14, jarY + neckH + jarH / 2);
 
     ctx.restore();
 }

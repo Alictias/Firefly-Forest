@@ -1,137 +1,65 @@
 let capturedFireflies = 0;
 let gameWon = false;
-const JAR_FIREFLIES_LIMIT = 25;
+const JAR_FIREFLIES_LIMIT = 75;
 
 const fireflies = [];
 const jarFireflies = [];
 
 function generateFireflies() {
-    for (let i = 0; i < 25; i++) {
-
-        const firefly = {
-
-            x: Math.random() * canvas.width,
-
-            y: Math.random() * canvas.height * 0.7,
-
+    for (let i = 0; i < 75; i++) {
+        fireflies.push({
+            worldAngle: Math.random() * Math.PI * 2,  // posição horizontal no mundo
+            y: 80 + Math.random() * canvas.height * 0.5,
             size: 3 + Math.random() * 2,
-
-            speedX: -0.3 + Math.random() * 0.6,
-
-            speedY: -0.2 + Math.random() * 0.4,
-
             glow: Math.random(),
-
             glowSpeed: 0.01 + Math.random() * 0.02,
-
-            // Controle do movimento
-            angle: Math.random() * Math.PI * 2,
-
+            moveAngle: Math.random() * Math.PI * 2,   // direção do movimento
             turnSpeed: -0.02 + Math.random() * 0.04
-        }
-
-        fireflies.push(firefly);
+        });
     }
-
 }
 
+function worldToScreen(worldAngle, camAngle) {
+    let delta = worldAngle - camAngle;
+    while (delta >  Math.PI) delta -= Math.PI * 2;
+    while (delta < -Math.PI) delta += Math.PI * 2;
+    return canvas.width * 0.5 + (delta / (FOV * 0.5)) * canvas.width * 0.5;
+}
 
-function drawFirefly(firefly) {
+function drawFirefly(firefly, camAngle) {
+    const screenX = worldToScreen(firefly.worldAngle, camAngle);
+
+    // Fora do campo de visão
+    if (screenX < -50 || screenX > canvas.width + 50) return;
 
     const brightness = firefly.glow;
-
-    const glow = ctx.createRadialGradient(
-        firefly.x,
-        firefly.y,
-        0,
-        firefly.x,
-        firefly.y,
-        35
-    );
-
-    glow.addColorStop(
-        0,
-        `rgba(255, 246, 168, ${brightness})`
-    );
-
-    glow.addColorStop(
-        1,
-        "rgba(255, 246, 168, 0)"
-    );
-
+    const glow = ctx.createRadialGradient(screenX, firefly.y, 0, screenX, firefly.y, 35);
+    glow.addColorStop(0, `rgba(255, 246, 168, ${brightness})`);
+    glow.addColorStop(1, "rgba(255, 246, 168, 0)");
     ctx.fillStyle = glow;
-
     ctx.beginPath();
-
-    ctx.arc(
-        firefly.x,
-        firefly.y,
-        35,
-        0,
-        Math.PI * 2
-    );
-
+    ctx.arc(screenX, firefly.y, 35, 0, Math.PI * 2);
     ctx.fill();
 
-
-    // Corpo do vagalume
-
-    ctx.fillStyle =
-        `rgba(255, 246, 168, ${brightness})`;
-
+    ctx.fillStyle = `rgba(255, 246, 168, ${brightness})`;
     ctx.beginPath();
-
-    ctx.arc(
-        firefly.x,
-        firefly.y,
-        firefly.size,
-        0,
-        Math.PI * 2
-    );
-
+    ctx.arc(screenX, firefly.y, firefly.size, 0, Math.PI * 2);
     ctx.fill();
 }
 
 function updateFirefly(firefly) {
+    firefly.moveAngle += firefly.turnSpeed;
 
-    // Movimento da direção
-    firefly.angle += firefly.turnSpeed;//serve para curva
+    // Movimento horizontal vira rotação no mundo
+    firefly.worldAngle += Math.cos(firefly.moveAngle) * 0.0008;
+    firefly.y          += Math.sin(firefly.moveAngle) * 0.5;
 
-    //controla o movimento geral, alterando as direções horizontal e vertical com base no ângulo
-    firefly.speedX = Math.cos(firefly.angle) * 0.5;//horizontal
-    firefly.speedY = Math.sin(firefly.angle) * 0.5;//vertical
-
-    firefly.x += firefly.speedX;
-    firefly.y += firefly.speedY;
-
-
-    // Limites da área dos vagalumes (bate e volta nas bordas)
-    const margin = 60;
-    //se bateu na esquerda, vai para direita
-    if (firefly.x < margin) {
-        firefly.angle = 0;
-    }
-    //o contrario 
-    if (firefly.x > canvas.width - margin) {
-        firefly.angle = Math.PI;
-    }
-    //y é vertical, se bateu em baixo, vai para cima 
-    if (firefly.y < margin) {
-        firefly.angle = Math.PI / 2;
-    }
-    //contrario (limitado a 0.7 pois vagalumes só chegam a 70% da tela)
-    if (firefly.y > canvas.height * 0.7 - margin) {
-        firefly.angle = -Math.PI / 2;
-    }
-
-
-    // Brilho aumenta a cada frame, diminui quando chega em 1 (efeito pisca pisca)
+    // Limites verticais
+    if (firefly.y < 60)                        { firefly.y = 60;                       firefly.moveAngle = Math.PI / 2; }
+    if (firefly.y > canvas.height * 0.7 - 60) { firefly.y = canvas.height * 0.7 - 60; firefly.moveAngle = -Math.PI / 2; }
 
     firefly.glow += firefly.glowSpeed;
-
-    if (firefly.glow > 1 || firefly.glow < 0) {
-        firefly.glowSpeed *= -1;
-    }
+    if (firefly.glow > 1 || firefly.glow < 0) firefly.glowSpeed *= -1;
 }
 
 function updateJarFireflies() {
@@ -148,23 +76,14 @@ function updateJarFireflies() {
     }
 }
 
-// Capturar vagalume com o mouse
-
-function captureFirefly(mouseX, mouseY) {//recebe a posição do clique
-
+function captureFirefly(mouseX, mouseY, camAngle) {
     for (let i = fireflies.length - 1; i >= 0; i--) {
-
         const firefly = fireflies[i];
+        const screenX = worldToScreen(firefly.worldAngle, camAngle);
 
-        const distance = Math.sqrt(
-            (mouseX - firefly.x) ** 2 +
-            (mouseY - firefly.y) ** 2
-        );
-
-        if (distance < 25) {
-
+        const dist = Math.sqrt((mouseX - screenX) ** 2 + (mouseY - firefly.y) ** 2);
+        if (dist < 25) {
             fireflies.splice(i, 1);
-
             capturedFireflies++;
 
             jarFireflies.push({
@@ -176,10 +95,7 @@ function captureFirefly(mouseX, mouseY) {//recebe a posição do clique
                 glowSpeed: 0.004 + Math.random() * 0.004
             });
 
-            if (capturedFireflies >= JAR_FIREFLIES_LIMIT) {
-                gameWon = true;
-            }
-
+            if (capturedFireflies >= JAR_FIREFLIES_LIMIT) gameWon = true;
             break;
         }
     }

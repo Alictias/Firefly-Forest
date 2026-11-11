@@ -1,24 +1,20 @@
 
     const canvas = document.getElementById("game");
-    
     const ctx = canvas.getContext("2d");
-    //pode ser alterador para webgl para 3d dps
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    ctx.fillStyle = "#202044";
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    // Camera rotation state
+    let camAngle = 0;
+    let targetCamAngle = 0;
+    const keys = {};
 
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup",   e => keys[e.key] = false);
 
     canvas.addEventListener("click", function(event) {
         if (gameWon) {
-            // Soltar os vagalumes de volta
             for (const jf of jarFireflies) {
                 fireflies.push({
                     x: Math.random() * canvas.width,
@@ -37,54 +33,39 @@
             gameWon = false;
             return;
         }
-        captureFirefly(event.clientX, event.clientY);
+        captureFirefly(event.clientX, event.clientY, camAngle);
     });
-
-    //--------------------------------------------------------
-//DESENHAR NA TELA (chamar as funções)  
 
     generateStars();
     generateForest();
     generateFireflies();
 
     function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Limpa o quadro anterior
+        // Camera rotation via keys
+        const rotSpeed = 0.03;
+        if (keys["ArrowLeft"]  || keys["a"] || keys["A"]) targetCamAngle -= rotSpeed;
+        if (keys["ArrowRight"] || keys["d"] || keys["D"]) targetCamAngle += rotSpeed;
 
-        ctx.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-
-        // Desenha o cenário
+        // Smooth camera lerp
+        camAngle += (targetCamAngle - camAngle) * 0.06;
 
         drawSky();
-
-        drawStars();
-
-        drawMoon();
-
+        drawStars(camAngle);
+        drawMoon(camAngle);
         drawGround();
-
-        drawForest();
-
-
-        // Atualiza e desenha os vagalumes
+        drawForest(camAngle);
 
         for (const firefly of fireflies) {
             updateFirefly(firefly);
-            drawFirefly(firefly);
+            drawFirefly(firefly, camAngle);
         }
 
         updateJarFireflies();
-
         drawUI();
 
         requestAnimationFrame(gameLoop);
     }
 
     gameLoop();
-
