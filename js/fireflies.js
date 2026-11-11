@@ -98,7 +98,6 @@ function updateJarFireflies() {
     }
 }
 
-// Retorna true se capturou
 function captureFirefly(mouseX, mouseY, camAngle) {
     for (let i = fireflies.length - 1; i >= 0; i--) {
         const firefly = fireflies[i];
@@ -117,8 +116,26 @@ function captureFirefly(mouseX, mouseY, camAngle) {
                 glowSpeed: 0.004 + Math.random() * 0.004
             });
             if (capturedFireflies >= MODES[gameMode].limit) gameWon = true;
+
+            // Have fun: reabastecer se abaixo de 50
+            if (MODES[gameMode].endless && fireflies.length < 50) {
+                spawnFirefly();
+            }
+
             return true;
         }
     }
     return false;
+}
+
+function spawnFirefly() {
+    fireflies.push({
+        worldAngle: Math.random() * Math.PI * 2,
+        y: 80 + Math.random() * canvas.height * 0.5,
+        size: 3 + Math.random() * 2,
+        glow: Math.random(),
+        glowSpeed: 0.01 + Math.random() * 0.02,
+        moveAngle: Math.random() * Math.PI * 2,
+        turnSpeed: -0.02 + Math.random() * 0.04
+    });
 }

@@ -4,17 +4,19 @@ const forest = [];
 const FOV = Math.PI * 0.7;
 
 const LAYERS = [
-    { depth: 0, radius: 0.55, count: 30, sizeMin: 200, sizeMax: 320, dark: "#0d1f18", mid: "#122518", light: "#1a3528" },
-    { depth: 1, radius: 0.75, count: 40, sizeMin: 120, sizeMax: 210, dark: "#152e22", mid: "#1e4030", light: "#2a5c42" },
-    { depth: 2, radius: 1.0,  count: 50, sizeMin: 70,  sizeMax: 140, dark: "#1e3d2c", mid: "#2a5540", light: "#3a7a5a" },
+    { depth: 0, radius: 0.55, count: 16, sizeMin: 200, sizeMax: 280, dark: "#0d1f18", mid: "#122518", light: "#1a3528" },
+    { depth: 1, radius: 0.75, count: 20, sizeMin: 130, sizeMax: 200, dark: "#152e22", mid: "#1e4030", light: "#2a5c42" },
+    { depth: 2, radius: 1.0,  count: 24, sizeMin: 80,  sizeMax: 130, dark: "#1e3d2c", mid: "#2a5540", light: "#3a7a5a" },
 ];
 
 function generateForest() {
     for (const layer of LAYERS) {
         for (let i = 0; i < layer.count; i++) {
-            const angle = (i / layer.count) * Math.PI * 2 + Math.random() * (Math.PI * 2 / layer.count);
+            // Offset por camada para evitar sobreposição nos mesmos ângulos
+            const layerOffset = (layer.depth / LAYERS.length) * (Math.PI * 2 / layer.count);
+            const angle = layerOffset + (i / layer.count) * Math.PI * 2 + (Math.random() - 0.5) * (Math.PI * 2 / layer.count) * 0.6;
             const size  = layer.sizeMin + Math.random() * (layer.sizeMax - layer.sizeMin);
-            const yBase = canvas.height * 0.56;
+            const yBase = canvas.height * 0.62;
             const yOff  = Math.random() * canvas.height * 0.04;
             forest.push({ angle, size, yBase: yBase + yOff, layer: layer.depth, radius: layer.radius });
         }
@@ -111,7 +113,7 @@ function drawForest(camAngle) {
 
         // Escala por profundidade: camada 0 (fundo) menor, camada 2 (frente) maior
         // radius vai de 0.55 (fundo) a 1.0 (frente) — invertemos para perspectiva
-        const scale = 0.4 + (1 - tree.radius) * 1.4;
+        const scale = 0.4 + tree.radius * 0.9;
 
         projected.push({ tree, screenX, scale });
     }
